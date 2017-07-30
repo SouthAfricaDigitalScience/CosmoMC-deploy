@@ -15,14 +15,14 @@
 
 . /etc/profile.d/modules.sh
 module add ci
-whoami
-cd ${WORKSPACE}/${NAME}-${VERSION}/build-${BUILD_NUMBER}
-make check
+module add  gcc/6.3.0
+cd ${WORKSPACE}/${NAME}-${VERSION}
+./camb test_params.ini
 
 echo $?
-
-make install
-mkdir -p ${REPO_DIR}
+mkdir -p $SOFT_DIR/bin $SOFT_DIR/lib
+cp camb $SOFT_DIR/bin
+cp Releaselib/*.so $SOFT_DIR/lib
 mkdir -p modules
 (
 cat <<MODULE_FILE
@@ -35,14 +35,15 @@ proc ModulesHelp { } {
 }
 
 module-whatis   "$NAME $VERSION."
-setenv       GMP_VERSION       $VERSION
-setenv       GMP_DIR           /data/ci-build/$::env(SITE)/$::env(OS)/$::env(ARCH)/$NAME/$VERSION
-prepend-path LD_LIBRARY_PATH   $::env(GMP_DIR)/lib
-prepend-path GCC_INCLUDE_DIR   $::env(GMP_DIR)/include
-prepend-path CFLAGS            "-I$::env(GMP_DIR)/include"
-prepend-path LDFLAGS           "-L$::env(GMP_DIR)/lib"
+setenv       COSMOMC_CAMB_VERSION       $VERSION
+setenv       COSMOMC_CAMB_DIR           /data/ci-build/$::env(SITE)/$::env(OS)/$::env(ARCH)/$NAME/$VERSION
+prepend-path LD_LIBRARY_PATH   $::env(COSMOMC_CAMB_DIR)/lib
+prepend-path CFLAGS            "$CFLAGS -I$::env(COSMOMC_CAMB_DIR)/include"
+prepend-path LDFLAGS           "$LDFLAGS -L$::env(COSMOMC_CAMB_DIR)/lib"
 MODULE_FILE
 ) > modules/$VERSION
 
-mkdir -vp ${LIBRARIES}/${NAME}
-cp -v modules/$VERSION ${LIBRARIES}/${NAME}
+mkdir -vp ${ASTRONOMY}/${NAME}
+cp -v modules/$VERSION ${ASTRONOMY}/${NAME}
+module avail ${NAME}
+module add  ${NAME}/${VERSION}
